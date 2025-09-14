@@ -15,9 +15,26 @@ test.describe('Login Page @login', () => {
     dashboardPage = new DashboardPage(page);
   });
 
-  test('Should not login when the authentication code is invalid', async ({ page }) => {
+  test('Should not login with invalid CPF', async (  ) => {
     
+    await loginPage.goto();
+    await loginPage.fillCpf('12345678901'); // CPF inválido
 
+    await expect(loginPage.getErrorMessage()).toHaveText('CPF inválido. Por favor, verifique.');
+  });
+
+  test('Should not login with invalid password', async (  ) => {
+    
+    await loginPage.goto();
+    await loginPage.fillCpf(user.document);
+    await loginPage.fillPassword('000000'); // Senha inválida
+
+    await expect(loginPage.getErrorMessage()).toHaveText('Acesso negado. Por favor, tente novamente.');
+  
+  });
+
+  test('Should not login when the authentication code is invalid', async (  ) => {
+    
     await loginPage.goto();
     await loginPage.fillCpf(user.document);
     await loginPage.fillPassword(user.password);
@@ -44,5 +61,6 @@ test.describe('Login Page @login', () => {
 
   });
 
-});
+  
 
+});

@@ -33,7 +33,7 @@ const queue = new Queue(queueConfig.name, {
 export const getJob = async (): Promise<Job | null> => {
   try {
     const jobs = await queue.getJobs();
-    console.log(jobs[0].data.code);
+    //console.log(jobs[0].data.code);
     return jobs.length > 0 ? jobs[0].data.code : null;
   } catch (error) {
     console.error('Erro ao buscar jobs:', error);

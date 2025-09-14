@@ -66,7 +66,7 @@ test.describe('Login Page @login', () => {
 
   });
 
-  test('Should login successfully with valid credentials via 2FA in redis queue', async ({ page }) => {
+  test('Should login successfully with valid credentials via 2FA in redis queue @login-redis', async ({ page }) => {
 
     await clearJobs();
     
@@ -77,8 +77,6 @@ test.describe('Login Page @login', () => {
     await page.getByRole('heading', { name: 'Verificação em duas etapas' }).waitFor({timeout: 3000}); // Espera a página de 2FA carregar
     
     const code = await getJob();
-
-    
 
     await loginPage.fillAuthCode(code); //Código válido
   

@@ -13,13 +13,15 @@ const connectionString =  'postgres://dba:dba@paybank-db:5432/UserDB';
 const db = pgp(connectionString);
 
 // Função para buscar o código 2FA mais recente
-export const get2FACode = async (): Promise<string | null> => {
+export const get2FACode = async (cpf): Promise<string | null> => {
     try {
         const query = `
-            SELECT code
-            FROM public."TwoFactorCode"
-            ORDER BY id DESC
-            LIMIT 1
+            SELECT t.code
+	        FROM public."TwoFactorCode" t
+	        JOIN public."User" u ON u."id" = t."userId"
+	        WHERE u."cpf" = '${cpf}'
+	        order by t.id desc
+	        limit 1;
         `;
 
         const result = await db.oneOrNone<TwoFactorCodeResult>(query);

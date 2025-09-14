@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/login';
 import { DashboardPage } from './pages/dashboard';
 import * as user from './data/user.json';
+
 import { get2FACode } from './support/db';
+import { clearJobs, getJob } from './support/redis';
 
 let loginPage
 let dashboardPage
@@ -13,6 +15,7 @@ test.describe('Login Page @login', () => {
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
+  
   });
 
   test('Should not login with invalid CPF', async (  ) => {
@@ -43,24 +46,46 @@ test.describe('Login Page @login', () => {
     await expect(loginPage.getErrorMessage()).toHaveText('Código inválido. Por favor, tente novamente.');
   });
 
-  test('Should login successfully with valid credentials', async ({ page }) => {
+  test('Should login successfully with valid credentials via 2FA in DB', async ({ page }) => {
+
+    await clearJobs();
     
     await loginPage.goto();
     await loginPage.fillCpf(user.document);
     await loginPage.fillPassword(user.password);
 
-    await page.waitForTimeout(3000);  //Temporario para aguardar o código 2FA ser gerado
-
-    const FACode = await get2FACode();
+    await page.getByRole('heading', { name: 'Verificação em duas etapas' }).waitFor({timeout: 3000}); // Espera a página de 2FA carregar
+    
+    
+    const FACode = await get2FACode(user.document);
 
     await loginPage.fillAuthCode(FACode); //Código válido
-   
-    await page.waitForTimeout(2000);  //Temporario para aguardar o redirecionamento para a página inicial
   
-    await expect(await dashboardPage.validateSuccessfulLogin()).toBeTruthy(); // Corrigido: valida se a função retorna verdadeiro/sucesso
+    await expect(await dashboardPage.validateSuccessfulLogin()).toHaveText('R$ 5.000,00');
+
 
   });
 
+  test('Should login successfully with valid credentials via 2FA in redis queue', async ({ page }) => {
+
+    await clearJobs();
+    
+    await loginPage.goto();
+    await loginPage.fillCpf(user.document);
+    await loginPage.fillPassword(user.password);
+
+    await page.getByRole('heading', { name: 'Verificação em duas etapas' }).waitFor({timeout: 3000}); // Espera a página de 2FA carregar
+    
+    const code = await getJob();
+
+    
+
+    await loginPage.fillAuthCode(code); //Código válido
+  
+    await expect(await dashboardPage.validateSuccessfulLogin()).toHaveText('R$ 5.000,00');
+
+
+  });
   
 
 });
